@@ -4,6 +4,7 @@ import bodyParser from "body-parser";
 import methodOverride from 'method-override';
 import pg from "pg";
 import ejs from "ejs";
+import cors from 'cors'
 
 //set up express and the port
 const app = express();
@@ -23,6 +24,13 @@ db.connect();
 
 //tell express what folder the static files are, make them accessible with relative urls
 app.use(express.static("public"));
+
+// allow requests from react
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}))
+
 //parse data that is recieved
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -35,7 +43,7 @@ app.use(methodOverride(function (req, res) {
       delete req.body._method
       return method
     }
-}))
+  }))
 
 //set up tags variables to be used later
 var tags = ["all" ,"tech", "lifestyle", "local", "diy", "art", "gardening", "sports"];
@@ -155,7 +163,6 @@ app.post('/api/register', async (req, res) => {
   currentUserId = user_id; currentUserName = username;
   res.status(201).json({ user_id, name: username });
 });
-
 
 //start the Express server
 app.listen(port, () => {

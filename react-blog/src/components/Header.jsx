@@ -1,7 +1,6 @@
 //react imports
 import React, { useState } from 'react'
-import { Routes, Route, useNavigate } from 'react-router-dom'
-import Header from './components/Header.jsx'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 
 //export header banner with nav buttons and tag filter
 export default function Header({ tags }) {
