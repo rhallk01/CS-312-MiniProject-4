@@ -2,6 +2,10 @@ import { useState } from 'react'
 import Header from './components/Header.jsx'
 import PostList from './components/PostList.jsx'
 import BlogPostForm from './components/Form.jsx'
+import EditPost from './components/EditPost.jsx'
+import SignIn from './components/SignIn.jsx'
+import SignUp from './components/SignUp.jsx'
+
 
 function App() {
   const [count, setCount] = useState(0)
