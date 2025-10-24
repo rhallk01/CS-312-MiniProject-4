@@ -1,5 +1,7 @@
 import { useState } from 'react'
-
+import Header from './components/Header.jsx'
+import PostList from './components/PostList.jsx'
+import BlogPostForm from './components/Form.jsx'
 
 function App() {
   const [count, setCount] = useState(0)
