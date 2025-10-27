@@ -11,7 +11,7 @@ const app = express();
 const port = 3000;
 app.engine("ejs", ejs.__express);
 
-//connect to database [NEW]
+//connect to database 
 const db = new pg.Client({
   user: "postgres",
   host: "localhost",
@@ -24,7 +24,7 @@ db.connect();
 
 //tell express what folder the static files are, make them accessible with relative urls
 app.use(express.static("public"));
-
+app.use(express.json())
 // allow requests from react
 app.use(cors({
   origin: 'http://localhost:5173',
@@ -33,8 +33,6 @@ app.use(cors({
 
 //parse data that is recieved
 app.use(bodyParser.urlencoded({ extended: true }));
-
-
 app.use(methodOverride(function (req, res) {
     if (req.body && typeof req.body === 'object' && '_method' in req.body) {
       // look in urlencoded POST bodies and delete it
@@ -47,7 +45,6 @@ app.use(methodOverride(function (req, res) {
 
 //set up tags variables to be used later
 var tags = ["all" ,"tech", "lifestyle", "local", "diy", "art", "gardening", "sports"];
-
 //set up variables to track the current user [NEW]
 let currentUserId;
 let currentUserName; 
@@ -78,7 +75,7 @@ app.get('/api/blogs', async (req, res) => {
 //submit and create a blog post, then go back to home page
 app.post('/api/blogs', async (req, res) => {
   try {
-     //make sure they are a user!
+    //make sure they are a user!
     if (!currentUserId) return res.status(401).json({ error: 'Login required' });
     //retrieve name, title, content, and tag from form
     const { title, content, tagName = 'all' } = req.body;
@@ -130,16 +127,60 @@ app.get('/api/blogs/:id', async (req, res) => {
   });
 });
 
+//update the existing blog post on submit
+app.put('/api/blogs/:id', async (req, res) => {
+  try {
+    //check that the user is logged in
+    if (!currentUserId) return res.status(401).json({ error: 'Login required' });
+    const { id } = req.params;
+    const { title, content, tagName = 'all' } = req.body;
+    //find the post being updated
+    const result = await db.query('SELECT * FROM blogs WHERE blog_id=$1', [id]);
+    if (!result.rows.length) return res.status(404).json({ error: 'Not found' });
+    const post = result.rows[0];
+    //heck that the logged-in user owns the post
+    if (post.creator_user_id !== currentUserId)
+      return res.status(403).json({ error: 'Forbidden: You can only edit your own posts' });
+    //update the post
+    const updated = await db.query(
+      `UPDATE blogs
+       SET title=$1, body=$2, tag=$3, time_updated=NOW()
+       WHERE blog_id=$4
+       RETURNING *`,
+      [title, content, tagName.toLowerCase(), id]
+    );
+
+    const new_post = updated.rows[0];
+    res.json({
+      id: new_post.blog_id,
+      name: new_post.creator_name,
+      title: new_post.title,
+      content: new_post.body,
+      time: new_post.time_updated,
+      initTime: new_post.date_created,
+      tag: new_post.tag,
+      creator_id: new_post.creator_user_id
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'Update failed' });
+  }
+});
+
+
 //handle submitted login request
 app.post('/api/login', async (req, res) => {
   //get the userid and password that was entered
   const { user_id, password } = req.body;
+  console.log('Login attempt:', user_id, password);
   //get all instances of rows in the database with the user id that was entered
   const result = await db.query('SELECT * FROM users WHERE user_id=$1', [user_id]);
+  console.log('Query result:', result.rows);
   //if user id doesnt exist, show message on login page
   if (!result.rows.length) return res.status(404).json({ error: 'User not found' });
   //get the row and store the password for checking
   const user = result.rows[0];
+  console.log('DB user password:', user.password);
   //check if entered password matches db password
   if (user.password !== password) return res.status(401).json({ error: 'Incorrect password' });
   //if so, store current user
