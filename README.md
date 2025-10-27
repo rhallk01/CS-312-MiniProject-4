@@ -1,4 +1,4 @@
 Once downloaded, run with:<br>
 
 * npm i
-* node index.js AND run dev simultaneously
+* "node index.js" AND "npm run dev" simultaneously
