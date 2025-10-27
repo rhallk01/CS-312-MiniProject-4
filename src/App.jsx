@@ -17,12 +17,7 @@ export default function App() {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-
-  //set load state to true
-  const fetchPosts = async () => {
-    setLoading(true)
-  }
-
+  
   //load all posts
   useEffect(() => {
     (async () => {
